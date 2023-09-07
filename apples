@@ -1,0 +1,241 @@
+import logo from './logo.svg';
+import './App.css';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { useEffect, useState } from 'react'
+pdfMake.vfs = pdfFonts.pdfMake.vfs
+
+
+function App() {
+
+  let USDollar = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  });
+
+  var stylingLookup =
+    [
+      { styleName: 'invoiceLineText', style: 'body8Regular' },
+
+      { styleName: 'invoiceLineOriginalPrice', style: 'body8Regular' },
+      { styleName: 'invoiceLineSavings', style: 'body8Regular' },
+      { stylename: 'invoiceLineSalePrice', style: 'body8Bold' }
+    ];
+
+  var savingsTypes = [
+    {
+      code: '1',
+      label: 'My Savings'
+    },
+    { code: '2', label: 'NUN' },
+    { code: '3', label: 'ge' },
+  ];
+
+  var workOrderData = {
+  id: '1'
+
+  };
+
+  var invoiceData = {
+
+    id: "1",
+ 
+  };
+
+  function buildInvoiceTableBody(data,) {
+    var columns = ['description', 'coverage',];
+    var headers = [{ text: 'Description', style: 'body8Bold', alignment: 'left', }, { text: 'Coverage', style: 'body8Bold', alignment: 'left', }, { text: 'Price', style: 'body8Bold', alignment: 'right', noWrap: true }];
+    var body = [];
+
+
+
+    body.push(headers);
+    data.forEach(function (row) {
+      console.log(row);
+
+      var dataRow = [];
+      columns.forEach(function (column) {
+        var rowEntry = {
+          text: row[column].toString(),
+          style: 'body8Regular'
+        };
+
+        dataRow.push(rowEntry);
+      })
+      var pricing = priceTable(row.originalPrice, row.salePrice, row.discounts);
+      dataRow.push(pricing);
+      body.push(dataRow);
+
+    });
+
+    // console.log(body);
+    return body
+  }
+
+  function priceTable(originalPrice, salePrice, discounts) {
+
+    var body = [];
+    body.push([{ text: 'Original price:', style: 'body8Regular', alignment: 'right' }, { text: USDollar.format(originalPrice), style: 'body8Bold', alignment: 'right', noWrap: true }]);
+    if (discounts.length > 0) {
+      discounts.forEach(function (discount) {
+        var discountLabel = savingsTypes.find(({ code }) => code === discount.type).label;
+        console.log(discountLabel);
+        body.push([{ text: discountLabel, style: 'body8Regular', alignment: 'right', }, { text: `(${USDollar.format(discount.amount)})`, style: 'body8Regular', alignment: 'right', noWrap: true }]);
+      });
+    };
+    body.push(['', { text: USDollar.format(salePrice), style: 'body10Regular', alignment: 'right', noWrap: true }]);
+
+
+    return {
+      table: {
+        widths: ['auto', 'auto'],
+        body: body
+      },
+      layout: {
+        hLineWidth(i, node) {
+          if (i === 0 || i === node.table.body.length) {
+            return 0;
+          }
+          return (i === node.table.headerRows) ? 0.2 : 0;
+        },
+
+        // hLineWidth(i) {
+        //   return 0.5;
+        // },
+        vLineWidth(i) {
+          return 0.5;
+        },
+        // hLineWidth: function (i, node) {
+        // 	return (i === 0 || i === node.table.body.length) ? 2 : 1;
+        // },
+        // vLineWidth: function (i, node) {
+        // 	return (i === 0 || i === node.table.widths.length) ? 1 : 1;
+        // },
+        hLineColor: function (i, node) {
+          return (i === 0 || i === node.table.body.length) ? 'white' : 'white';
+        },
+        vLineColor: function (i, node) {
+          return (i === 0 || i === node.table.widths.length) ? 'white' : 'white';
+        },
+        // hLineStyle: function (i, node) { return {dash: { length: 10, space: 4 }}; },
+        // vLineStyle: function (i, node) { return {dash: { length: 10, space: 4 }}; },
+        // paddingLeft: function(i, node) { return 8; },
+        // paddingRight: function(i, node) { return 4; },
+        // paddingTop: function(i, node) { return 4; },
+        // paddingBottom: function(i, node) { return 4; },
+        // fillColor: function (rowIndex, node, columnIndex) {
+        // 	return (rowIndex !== 0 && rowIndex % 2 === 0) ? '#d5d5d5' : null;
+        // }
+      }
+    };
+
+  }
+
+
+  function table(data) {
+
+    return {
+      table: {
+        headerRows: 1,
+        widths: [150, 120, 180],
+        body: buildInvoiceTableBody(data)
+      },
+      layout: {
+        // hLineWidth(i, node) {
+        //   if (i === 0 || i === node.table.body.length) {
+        //     return 0;
+        //   }
+        //   return (i === node.table.headerRows) ? 0.2 : 0;
+        // },
+
+        hLineWidth(i) {
+          return 0.4;
+        },
+        vLineWidth(i) {
+          return 0;
+        },
+        // hLineWidth: function (i, node) {
+        // 	return (i === 0 || i === node.table.body.length) ? 2 : 1;
+        // },
+        // vLineWidth: function (i, node) {
+        // 	return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+        // },
+        // hLineColor: function (i, node) {
+        // 	return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
+        // },
+        // vLineColor: function (i, node) {
+        // 	return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
+        // },
+        // hLineStyle: function (i, node) { return {dash: { length: 10, space: 4 }}; },
+        // vLineStyle: function (i, node) { return {dash: { length: 10, space: 4 }}; },
+        paddingLeft: function (i, node) { return 8; },
+        paddingRight: function (i, node) { return 4; },
+        paddingTop: function (i, node) { return 4; },
+        paddingBottom: function (i, node) { return 4; },
+        // fillColor: function (rowIndex, node, columnIndex) {
+        // 	return (rowIndex !== 0 && rowIndex % 2 === 0) ? '#d5d5d5' : null;
+        // }
+      }
+    };
+  }
+
+
+
+  const docDefinition = {
+    content: [
+
+      table(invoiceData.lines, []
+      )
+    ],
+
+    styles: {
+      header14Bold: {
+        fontSize: 14,
+        bold: true,
+      },
+      body10Italic: {
+        fontSize: 10,
+        italics: true,
+        alignment: 'left',
+      },
+      body10Regular: {
+        fontSize: 10,
+        alignment: 'left'
+      },
+      body8Regular: {
+        fontSize: 8
+      },
+      body8Italic: {
+        fontSize: 8,
+        italics: true,
+      },
+      body8Bold: {
+        fontSize: 8,
+        bold: true
+      }
+    },
+  };
+  const [url, setUrl] = useState(null)
+
+  const createPdf = () => {
+    const pdfGenerator = pdfMake.createPdf(docDefinition);
+    pdfGenerator.getBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      setUrl(url)
+    })
+    pdfGenerator.download()
+  }
+
+  return (
+    <div className="App">
+      <button onClick={createPdf}>Generate PDF</button>
+      {url && (
+        <div>
+          {url}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
